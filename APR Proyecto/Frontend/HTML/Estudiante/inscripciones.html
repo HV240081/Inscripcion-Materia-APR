@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inscribir — Tutorías UDB</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--accent:#0f4db6;--muted:#6b6b6b}
+    *{box-sizing:border-box;font-family:'Poppins',sans-serif}
+    body{margin:0;background:var(--bg);color:#222}
+    .site-header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#fff;border-bottom:1px solid #eee}
+    .brand-logo{height:34px}
+    .main{max-width:1100px;margin:28px auto;padding:0 16px;display:grid;grid-template-columns:360px 1fr;gap:18px}
+    .card{background:var(--card);border-radius:12px;box-shadow:0 6px 18px rgba(15,77,182,0.04);padding:16px}
+    .controls .pretty-date{font-weight:700;color:#374151;margin-top:8px}
+    label{font-weight:600;color:#374151;margin-right:8px}
+
+    /* controles superiores */
+    .controls .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    select, input[type="date"]{padding:8px 10px;border-radius:8px;border:1px solid #e4e7ef;background:#fff}
+    .nav-btn{padding:8px 10px;border-radius:8px;border:1px solid #dfe7f5;background:#fff;cursor:pointer}
+    .nav-btn:active{transform:translateY(1px)}
+
+    /* tabla horario */
+    .schedule .topbar{display:flex;justify-content:flex-end;align-items:center;margin-bottom:10px;gap:8px}
+    .schedule-table{width:100%;border-collapse:collapse;font-size:14px}
+    .schedule-table th, .schedule-table td{padding:10px;border-bottom:1px solid #f0f3fb;text-align:left;vertical-align:middle}
+    .schedule-table th{background:transparent;color:#4b5563;font-weight:700}
+    .slot-row{transition:background .12s}
+    .slot-row.selected{background:linear-gradient(90deg,rgba(15,77,182,0.06),transparent)}
+    .small-badge{font-size:12px;color:#fff;padding:6px 8px;border-radius:999px;display:inline-block}
+    .badge-available{background:#10b981}
+    .badge-full{background:#ef4444}
+    .btn-reserve{padding:8px 10px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    .btn-reserve.primary{background:#0f4db6;color:#fff}
+    .btn-reserve.ghost{background:#eef2fb;color:#0f4db6}
+    .muted{color:var(--muted);font-size:13px}
+    .empty{padding:20px;text-align:center;color:#6b7280}
+
+    footer.site-footer{padding:18px;text-align:center;color:#777;font-size:14px;grid-column:1/-1}
+
+    @media (max-width:920px){
+      .main{grid-template-columns:1fr;max-width:760px}
+    }
+    @media (max-width:520px){
+      .schedule-table td, .schedule-table th{padding:8px;font-size:13px}
+      .brand-logo{height:28px}
+    }
+    /* --- Fix de visibilidad para el selector de materias --- */
+
+/* Asegura que el select se muestre correctamente */
+/* --- Fix de visibilidad para el selector de materias --- */
+#subjectSelect {
+  min-width: 220px;
+  width: 100%;
+  max-width: 280px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #111;
+  appearance: auto; /* hace visible el ícono desplegable */
+  z-index: 10; /* Asegúrate de que el select esté por encima de otros elementos */
+}
+
+/* Asegura que el select se muestre correctamente */
+.controls {
+  position: relative;
+  overflow: visible !important; /* Permite que el menú del select se salga del card */
+  z-index: 9999; /* Asegúrate de que esté en una capa superior */
+}
+
+  </style>
+</head>
+<body>
+  <header class="site-header">
+        <div class="brand">
+            <img src="../../IMG/UDB_horizontal.png" alt="UDB" class="brand-logo">
+        </div>
+        <div class="header-buttons">
+            <button title="Notificaciones">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="dropdown">
+                <button title="Usuario">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="../Login.html" id="logout">Cerrar sesión</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+  <main class="main">
+    <!-- controles: materia y fecha -->
+    <section class="controls card">
+      <div class="row">
+        <label for="subjectSelect">Materia:</label>
+        <select id="subjectSelect" aria-label="Seleccionar materia"></select>
+
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button id="prevDay" class="nav-btn" aria-label="día anterior">&lt;</button>
+          <input id="datePicker" type="date" aria-label="Seleccionar fecha" />
+          <button id="nextDay" class="nav-btn" aria-label="día siguiente">&gt;</button>
+        </div>
+      </div>
+
+      <div id="prettyDate" class="pretty-date" aria-live="polite"></div>
+      <div style="margin-top:10px;color:#6b7280;font-size:13px">Selecciona una materia y una fecha para ver las sesiones disponibles. Pulsa "Reservar" en la fila correspondiente.</div>
+    </section>
+
+    <!-- horario / tabla -->
+    <section class="schedule card" aria-label="Horario de tutorías">
+      <div class="topbar">
+        <button id="reserveBtn" class="nav-btn" style="background-color:#28a745;color:white;"><i class="fas fa-plus"></i> Reservar Cupo</button>
+      </div>
+
+      <div id="scheduleContainer">
+        <table id="scheduleTable" class="schedule-table" aria-live="polite">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Materia</th>
+              <th>Modalidad</th>
+              <th>Cupos</th>
+              <th>Descripción</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="scheduleBody">
+            <!-- filas generadas dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+      <div id="emptyMsg" class="empty" style="display:none">No hay tutorías para la materia y fecha seleccionadas.</div>
+    </section>
+
+    <footer class="site-footer">Interfaz minimal — Tutorías en línea</footer>
+  </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const subjectSelect = document.getElementById('subjectSelect');
+  const datePicker = document.getElementById('datePicker');
+  const prettyDate = document.getElementById('prettyDate');
+  const scheduleBody = document.getElementById('scheduleBody');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const reserveBtn = document.getElementById('reserveBtn');
+
+  let tutorias = [];
+  let selectedRowId = null;
+  const idEstudiante = 1; // <-- luego lo obtienes de sesión PHP
+
+  const today = new Date().toISOString().slice(0,10);
+  datePicker.value = today;
+  prettyDate.textContent = formatPretty(today);
+
+  // --- funciones utilitarias ---
+  function formatPretty(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("es-ES", { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  }
+  function escapeHtml(str){ return str ? String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])) : ''; }
+
+  // --- cargar tutorías desde el backend ---
+  async function loadTutorias() {
+    const res = await fetch("../../../Backend/controladores/listar_tutorias.php");
+    tutorias = await res.json();
+    populateSubjects();
+    renderSchedule();
+  }
+
+  function populateSubjects() {
+    const materias = Array.from(new Set(tutorias.map(t => t.materia))).sort();
+    subjectSelect.innerHTML = '<option value="">-- Todas las materias --</option>';
+    materias.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      subjectSelect.appendChild(opt);
+    });
+  }
+
+  function renderSchedule() {
+    const materia = subjectSelect.value;
+    const fecha = datePicker.value;
+    const filtradas = tutorias.filter(t =>
+      (!materia || t.materia === materia) && (!fecha || t.fecha === fecha)
+    );
+
+    scheduleBody.innerHTML = '';
+    emptyMsg.style.display = filtradas.length ? 'none' : 'block';
+
+    filtradas.forEach(t => {
+      const tr = document.createElement('tr');
+      tr.classList.add('slot-row');
+      tr.dataset.id = t.id;
+
+      const disponibles = t.cupos_restantes;
+
+      tr.innerHTML = `
+        <td><strong>${t.hora}</strong></td>
+        <td>${escapeHtml(t.materia)}</td>
+        <td>${escapeHtml(t.modalidad)}</td>
+        <td><span class="small-badge ${disponibles>0?'badge-available':'badge-full'}">${disponibles>0?disponibles+' disponibles':'Sin cupos'}</span></td>
+        <td>${escapeHtml(t.descripcion || '')}</td>
+        <td style="text-align:right">
+          <button class="btn-reserve ${disponibles>0?'primary':'ghost'}" ${disponibles>0?'':'disabled'}>
+            ${disponibles>0?'Reservar':'Lleno'}
+          </button>
+        </td>
+      `;
+
+      // Click fila -> seleccionar
+      tr.addEventListener('click', () => {
+        document.querySelectorAll('.slot-row').forEach(r => r.classList.remove('selected'));
+        tr.classList.add('selected');
+        selectedRowId = t.id;
+      });
+
+      // Acción reservar
+      tr.querySelector('button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        reserveSlot(t.id);
+      });
+
+      scheduleBody.appendChild(tr);
+    });
+  }
+
+  async function reserveSlot(idTutoria) {
+    if (!confirm("¿Deseas reservar este cupo?")) return;
+
+    const formData = new FormData();
+    formData.append('id_tutoria', idTutoria);
+    formData.append('id_estudiante', idEstudiante);
+
+    const res = await fetch("../../../Backend/controladores/inscripciones_controlador.php", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    alert(data.msg);
+    if (data.status === "ok") loadTutorias(); // recargar la tabla si se inscribe
+  }
+
+  // --- eventos ---
+  subjectSelect.addEventListener('change', renderSchedule);
+  datePicker.addEventListener('change', () => {
+    prettyDate.textContent = formatPretty(datePicker.value);
+    renderSchedule();
+  });
+  reserveBtn.addEventListener('click', () => {
+    if (selectedRowId) reserveSlot(selectedRowId);
+    else alert("Selecciona una tutoría primero.");
+  });
+
+  // cargar tutorías al iniciar
+  loadTutorias();
+});
+</script>
+
+</body>
+</html>
